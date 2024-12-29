@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcards</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="blue-header">
+        <img src="logo.png" alt="Logo" class="logo">
+        <h1>FlashGPT</h1>
+    </header>
+
+    <div class="container">
+        <h4>Upload PDF/Scan of your lecture notes or study guide, and ChatGPT will make flashcards!</h4>
+        <form id="upload-form" enctype="multipart/form-data">
+            <input type="file" name="pdf" accept=".pdf" />
+            <button type="submit">Upload PDF</button>
+        </form>
+
+        <div class="flashcard-viewer">
+            <!-- Card will be displayed here -->
+            <div class="flashcard-container">
+                <!-- Flashcard content dynamically inserted here -->
+            </div>
+            <div class="navigation">
+                <button id="prev-card" disabled>&lt; Previous</button>
+                <button id="next-card" disabled>Next &gt;</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="blue-footer">
+        <p>&copy; 2024 AdventureKO Studios</p>
+    </footer>
+
+    <script>
+        let currentCardIndex = 0;
+        let flashcards = [];
+
+        // Handle file upload and flashcard display
+        document.getElementById('upload-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            const response = await fetch('http://localhost:3000/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                flashcards = data.flashcards;
+                currentCardIndex = 0;
+                displayCard();
+                updateNavigation();
+            } else {
+                alert('Failed to upload PDF');
+            }
+        });
+
+        // Display the current flashcard
+        function displayCard() {
+            const container = document.querySelector('.flashcard-container');
+            container.innerHTML = ''; // Clear existing card
+            if (flashcards.length > 0) {
+                const flashcard = flashcards[currentCardIndex];
+                const card = document.createElement('div');
+                card.classList.add('flashcard');
+                card.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-front">${flashcard.question}</div>
+                        <div class="card-back">${flashcard.answer}</div>
+                    </div>
+                `;
+                card.addEventListener('click', () => {
+                    card.classList.toggle('flipped');
+                });
+                container.appendChild(card);
+            }
+        }
+
+        // Update navigation button states
+        function updateNavigation() {
+            document.getElementById('prev-card').disabled = currentCardIndex === 0;
+            document.getElementById('next-card').disabled = currentCardIndex === flashcards.length - 1;
+        }
+
+        // Navigation event listeners
+        document.getElementById('prev-card').addEventListener('click', () => {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                displayCard();
+                updateNavigation();
+            }
+        });
+
+        document.getElementById('next-card').addEventListener('click', () => {
+            if (currentCardIndex < flashcards.length - 1) {
+                currentCardIndex++;
+                displayCard();
+                updateNavigation();
+            }
+        });
+    </script>
+</body>
+</html>
