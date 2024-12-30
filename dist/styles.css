@@ -113,6 +113,7 @@ button:disabled {
     position: relative;
     transform-style: preserve-3d;
     transition: transform 0.6s;
+    overflow: auto;
 }
 
 .card-front, .card-back {
@@ -125,10 +126,13 @@ button:disabled {
     align-items: center;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    font-size: 20px; /* Reduced font size */
+    font-size: 20px; /* Font size remains */
     text-align: center;
-    padding: 20px; /* Reduced padding */
-    line-height: 1.4;
+    padding: 20px; /* Padding for spacing */
+    line-height: 1.4; /* Spacing between lines */
+    overflow-y: auto; /* Add vertical scrollbar for overflowing content */
+    max-height: 100%; /* Ensure content doesn't exceed card height */
+    word-wrap: break-word; /* Break long words */
 }
 
 .card-front {
@@ -201,6 +205,11 @@ button:not(:disabled):hover {
 
     h1 {
         font-size: 1.5rem; /* Adjust title size for mobile */
+    }
+    
+    .card-front, .card-back {
+        font-size: 16px; /* Adjust font size */
+        padding: 10px; /* Adjust padding */
     }
 
     .container {
