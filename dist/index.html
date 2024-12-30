@@ -38,34 +38,73 @@
     </footer>
 
     <script>
+        // Variables for flashcard display
         let currentCardIndex = 0;
         let flashcards = [];
-
-        // Handle file upload and flashcard display
+    
+        // Handle file upload form submission
         document.getElementById('upload-form').addEventListener('submit', async function (e) {
-            e.preventDefault();
+            e.preventDefault(); // Prevent default form submission
+    
             const formData = new FormData(this);
-            
-            const response = await fetch('http://localhost:3000/upload', {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (response.ok) {
+            const file = formData.get('pdf');
+    
+            // Validate file input
+            if (!file || file.type !== "application/pdf") {
+                alert('Please upload a valid PDF file.');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) { // 5MB size limit
+                alert('File size must be less than 5MB.');
+                return;
+            }
+    
+            // Show a loading indicator (optional)
+            const uploadButton = this.querySelector('button[type="submit"]');
+            uploadButton.textContent = 'Uploading...';
+            uploadButton.disabled = true;
+    
+            try {
+                // Send file to the serverless function
+                const response = await fetch('/.netlify/functions/api/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+    
+                if (!response.ok) {
+                    const errorMessage = await response.text();
+                    throw new Error(errorMessage || 'Failed to upload the PDF.');
+                }
+    
+                // Parse response JSON
                 const data = await response.json();
-                flashcards = data.flashcards;
+                flashcards = data.flashcards || [];
+    
+                if (flashcards.length === 0) {
+                    alert('No flashcards generated. Please try another file.');
+                    return;
+                }
+    
+                // Display the first flashcard
                 currentCardIndex = 0;
                 displayCard();
                 updateNavigation();
-            } else {
-                alert('Failed to upload PDF');
+    
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert(`Error: ${error.message}`);
+            } finally {
+                // Reset the button state
+                uploadButton.textContent = 'Upload PDF';
+                uploadButton.disabled = false;
             }
         });
-
+    
         // Display the current flashcard
         function displayCard() {
             const container = document.querySelector('.flashcard-container');
-            container.innerHTML = ''; // Clear existing card
+            container.innerHTML = ''; // Clear existing content
+    
             if (flashcards.length > 0) {
                 const flashcard = flashcards[currentCardIndex];
                 const card = document.createElement('div');
@@ -76,19 +115,17 @@
                         <div class="card-back">${flashcard.answer}</div>
                     </div>
                 `;
-                card.addEventListener('click', () => {
-                    card.classList.toggle('flipped');
-                });
+                card.addEventListener('click', () => card.classList.toggle('flipped'));
                 container.appendChild(card);
             }
         }
-
+    
         // Update navigation button states
         function updateNavigation() {
             document.getElementById('prev-card').disabled = currentCardIndex === 0;
             document.getElementById('next-card').disabled = currentCardIndex === flashcards.length - 1;
         }
-
+    
         // Navigation event listeners
         document.getElementById('prev-card').addEventListener('click', () => {
             if (currentCardIndex > 0) {
@@ -97,7 +134,7 @@
                 updateNavigation();
             }
         });
-
+    
         document.getElementById('next-card').addEventListener('click', () => {
             if (currentCardIndex < flashcards.length - 1) {
                 currentCardIndex++;
@@ -106,5 +143,6 @@
             }
         });
     </script>
+    
 </body>
 </html>
